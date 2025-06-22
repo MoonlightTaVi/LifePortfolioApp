@@ -1,0 +1,21 @@
+<configuration>
+
+	<statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+
+    <property name="LOGS" value="logs"/>
+
+    <!-- Debug to a file -->
+    <appender name="MAIN" class="ch.qos.logback.core.FileAppender">
+        <file>spring-app.log</file>
+        <append>false</append>
+        <encoder>
+            <pattern>%-5level %d{yyyy-MM-dd HH:mm:ss} [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Everything else to another file -->
+    <root level="INFO">
+        <appender-ref ref="MAIN"/>
+    </root>
+
+</configuration>
