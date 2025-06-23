@@ -36,6 +36,20 @@ public class LifeEntry {
 	private String unit = "<unknown unit>";
 	
 	@Override
+	public boolean equals(Object anotherObject) {
+		boolean equals = false;
+		if (anotherObject instanceof LifeEntry anotherEntry) {
+			equals = this.id == anotherEntry.getId();
+		}
+		return equals;
+	}
+	
+	@Override
+	public int hashCode() {
+		return id.intValue();
+	}
+	
+	@Override
 	public String toString() {
 		return String.format(
 				"%d. (🗓️%s) 🚩%s [%s]\n - (⏱️ %.2f hrs) \"%s\" %d 🌟 / %d ❤️",

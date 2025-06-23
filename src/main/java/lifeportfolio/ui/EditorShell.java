@@ -72,7 +72,7 @@ public class EditorShell {
 		for (Area area : Area.values()) {
 			areas.put(area, 0);
 		}
-		service.getWeekEntries().stream().filter(e -> e.getDate().isAfter(LocalDate.now().minusDays(7))).forEach(e -> {
+		service.getCachedEntries().stream().filter(e -> e.getDate().isAfter(LocalDate.now().minusDays(7))).forEach(e -> {
 			Area area = e.getArea();
 			int count = areas.get(area);
 			count++;
@@ -99,7 +99,7 @@ public class EditorShell {
 		for (PERMAV element : PERMAV.values()) {
 			elements.put(element, 0);
 		}
-		service.getWeekEntries().stream().filter(e -> e.getDate().isAfter(LocalDate.now().minusDays(7))).forEach(e -> {
+		service.getCachedEntries().stream().filter(e -> e.getDate().isAfter(LocalDate.now().minusDays(7))).forEach(e -> {
 			PERMAV element = e.getPermav();
 			int count = elements.get(element);
 			count++;

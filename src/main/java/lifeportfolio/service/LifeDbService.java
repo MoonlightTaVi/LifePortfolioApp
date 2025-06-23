@@ -21,20 +21,20 @@ public class LifeDbService implements InitializingBean {
 	@Autowired
 	private LifeRepo repository;
 	@Getter
-	private Set<LifeEntry> weekEntries = new HashSet<>();
+	private Set<LifeEntry> cachedEntries = new HashSet<>();
 	
 	
 	public void save(LifeEntry entry) {
-		weekEntries.add(entry);
+		cachedEntries.add(entry);
 		repository.save(entry);
 	}
 	public void delete(LifeEntry entry) {
-		weekEntries.remove(entry);
+		cachedEntries.remove(entry);
 		repository.delete(entry);
 	}
 	
 	public LifeEntry getById(long id) {
-		LifeEntry entry = weekEntries.parallelStream()
+		LifeEntry entry = cachedEntries.parallelStream()
 				.filter(e -> e.getId().longValue() == id)
 				.findAny()
 				.orElse(null);
@@ -47,7 +47,7 @@ public class LifeDbService implements InitializingBean {
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		LocalDate now = LocalDate.now();
-		weekEntries.addAll(
+		cachedEntries.addAll(
 				filter(
 						e -> e.getDate()
 						.isAfter(now.minusDays(7))

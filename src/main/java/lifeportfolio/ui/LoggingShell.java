@@ -1,7 +1,6 @@
 package lifeportfolio.ui;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +21,7 @@ public class LoggingShell {
 	public String add(
 			@ShellOption(
 					value = { "--unit", "-u", "--message", "-m", "--desc", "-d" },
-					help = "Name / description of the logged activity (without quotation marks)."
+					help = "Name / description of the logged activity unit (without quotation marks)."
 					) String[] entryMessageWords
 			) {
 		String entryMessage = String.join(" ", entryMessageWords);
@@ -144,12 +143,90 @@ public class LoggingShell {
 			value = "List cached entries."
 			)
 	public String list() {
-		List<LifeEntry> entries = new ArrayList<>();
-		entries.addAll(service.getWeekEntries());
-		entries.sort(
-				(a, b) -> a.getDate().compareTo(b.getDate()) + 
-				a.getId().compareTo(b.getId())
+		return String.join(
+				"\n",
+				service
+				.getCachedEntries()
+				.stream()
+				.sorted(
+						(a, b) -> b.getDate().compareTo(a.getDate()) + 
+						b.getId().compareTo(a.getId())
+						)
+				.map(e -> e.toString())
+				.toList()
 				);
+	}
+	
+	@ShellMethod(
+			value = "List filtered entries."
+			)
+	public String filter(
+			@ShellOption(
+					value = { "--name", "-n" },
+					help = "(Optional) Unit name starts with this sequence of characters.",
+					defaultValue = ShellOption.NULL
+					) String nameStartsWith,
+			@ShellOption(
+					value = { "--area", "-a" },
+					help = "(Optional) Filter by partial area name.",
+					defaultValue = ShellOption.NULL
+					) String areaName,
+			@ShellOption(
+					value = { "--element", "-e" },
+					help = "(Optional) Filter by partial PERMAV element name.",
+					defaultValue = ShellOption.NULL
+					) String elementName,
+			@ShellOption(
+					value = { "--important", "-i" },
+					help = "(Optional) Filter by importance >= 5.",
+					defaultValue = "false"
+					) Boolean showImportant,
+			@ShellOption(
+					value = { "--unimportant", "-I" },
+					help = "(Optional) Filter by importance <= 5.",
+					defaultValue = "false"
+					) Boolean showUnimportant,
+			@ShellOption(
+					value = { "--satisfied", "-s" },
+					help = "(Optional) Filter by satisfaction >= 5.",
+					defaultValue = "false"
+					) Boolean showSatisfied,
+			@ShellOption(
+					value = { "--unsatisfied", "-S" },
+					help = "(Optional) Filter by satisfaction <= 5.",
+					defaultValue = "false"
+					) Boolean showUnsatisfied,
+			@ShellOption(
+					value = { "--weeks", "-w" },
+					help = "(Optional) Filter by occurences in this number of passed weeks.",
+					defaultValue = "1"
+					) Long weeks,
+			@ShellOption(
+					value = { "--hours", "--h", "--time", "-t" },
+					help = "(Optional) Filter by hours >= {number}.",
+					defaultValue = "0"
+					) Float hours
+			) {
+		List<LifeEntry> entries = service.filter(e -> {
+			boolean filter = true;
+			filter = e.getDate().isAfter(LocalDate.now().minusWeeks(weeks));
+			filter = filter && (nameStartsWith == null || e.getUnit().toLowerCase().startsWith(nameStartsWith.toLowerCase()));
+			filter = filter && (areaName == null || e.getArea().toString().toLowerCase().contains(areaName));
+			filter = filter && (elementName == null || e.getPermav().toString().toLowerCase().contains(elementName));
+			filter = filter && (!showImportant || e.getImportance() >= 5);
+			filter = filter && (!showUnimportant || e.getImportance() <= 5);
+			filter = filter && (!showSatisfied || e.getSatisfaction() >= 5);
+			filter = filter && (!showUnsatisfied || e.getSatisfaction() <= 5);
+			filter = filter && (e.getHours().compareTo(hours) >= 0);
+			return filter;
+		});
+		service.getCachedEntries().addAll(entries);
+		entries.stream()
+		.sorted(
+				(a, b) -> b.getDate().compareTo(a.getDate()) + 
+				b.getId().compareTo(a.getId())
+				)
+		.toList();
 		return String.join("\n", entries.stream().map(e -> e.toString()).toList());
 	}
 }
