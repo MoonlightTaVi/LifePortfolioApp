@@ -46,13 +46,68 @@ public class LifeDbService implements InitializingBean {
 	
 	@Override
 	public void afterPropertiesSet() throws Exception {
+		cachedEntries.addAll(filterByLastWeek());
+	}
+	
+	public List<LifeEntry> getWeekly() {
+		return cachedEntries.stream()
+				.filter(e -> e.getDate().isAfter(
+						LocalDate.now().minusDays(7)
+						))
+				.sorted((a, b) -> b.getDate().compareTo(a.getDate()))
+				.toList();
+	}
+	
+	public List<LifeEntry> filterByLastWeek() {
 		LocalDate now = LocalDate.now();
-		cachedEntries.addAll(
-				filter(
-						e -> e.getDate()
-						.isAfter(now.minusDays(7))
-						)
-				);
+		return filterByDate(now.minusDays(6), now);
+	}
+	
+	public List<LifeEntry> filterByDate(LocalDate from, LocalDate to) {
+		return repository.filterByDate(from, to);
+	}
+	
+	public List<LifeEntry> filter(
+			long forPastWeeks,
+			String nameStartsWith,
+			String areaName,
+			String elementName,
+			boolean showImportant,
+			boolean showUnimportant,
+			boolean showSatisfied,
+			boolean showUnsatisfied,
+			float hours
+			) {
+		LocalDate now = LocalDate.now();
+		return repository.filterByDate(
+				now.minusWeeks(forPastWeeks),
+				now
+				)
+				.stream().parallel()
+				.filter( e -> {
+					boolean filter = true;
+					filter = filter && (nameStartsWith == null ||
+							e.getUnit().toLowerCase()
+							.startsWith(nameStartsWith.toLowerCase()));
+					filter = filter && (areaName == null ||
+							e.getArea().toString().toLowerCase()
+							.contains(areaName));
+					filter = filter &&
+							(elementName == null ||
+							e.getPermav().toString().toLowerCase()
+							.contains(elementName));
+					filter = filter &&
+							(!showImportant || e.getImportance() >= 5);
+					filter = filter &&
+							(!showUnimportant || e.getImportance() <= 5);
+					filter = filter &&
+							(!showSatisfied || e.getSatisfaction() >= 5);
+					filter = filter &&
+							(!showUnsatisfied || e.getSatisfaction() <= 5);
+					filter = filter &&
+							(e.getHours().compareTo(hours) >= 0);
+					return filter;
+			}).sorted((a, b) -> b.getDate().compareTo(a.getDate())).toList();
 	}
 	
 	public List<LifeEntry> filter(Predicate<LifeEntry> predicate) {

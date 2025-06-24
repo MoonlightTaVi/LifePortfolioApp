@@ -207,26 +207,17 @@ public class LoggingShell {
 					defaultValue = "0"
 					) Float hours
 			) {
-		List<LifeEntry> entries = service.filter(e -> {
-			boolean filter = true;
-			filter = e.getDate().isAfter(LocalDate.now().minusWeeks(weeks));
-			filter = filter && (nameStartsWith == null || e.getUnit().toLowerCase().startsWith(nameStartsWith.toLowerCase()));
-			filter = filter && (areaName == null || e.getArea().toString().toLowerCase().contains(areaName));
-			filter = filter && (elementName == null || e.getPermav().toString().toLowerCase().contains(elementName));
-			filter = filter && (!showImportant || e.getImportance() >= 5);
-			filter = filter && (!showUnimportant || e.getImportance() <= 5);
-			filter = filter && (!showSatisfied || e.getSatisfaction() >= 5);
-			filter = filter && (!showUnsatisfied || e.getSatisfaction() <= 5);
-			filter = filter && (e.getHours().compareTo(hours) >= 0);
-			return filter;
-		});
-		service.getCachedEntries().addAll(entries);
-		entries.stream()
-		.sorted(
-				(a, b) -> b.getDate().compareTo(a.getDate()) + 
-				b.getId().compareTo(a.getId())
-				)
-		.toList();
+		List<LifeEntry> entries = service.filter(
+				weeks,
+				nameStartsWith,
+				areaName,
+				elementName,
+				showImportant,
+				showUnimportant,
+				showSatisfied,
+				showUnsatisfied,
+				hours
+				);
 		return String.join("\n", entries.stream().map(e -> e.toString()).toList());
 	}
 }
