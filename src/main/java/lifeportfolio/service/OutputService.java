@@ -25,7 +25,7 @@ public class OutputService {
 		Map<String, Integer> importance = new HashMap<>();
 		Map<String, Integer> count = new HashMap<>();
 		for (LifeEntry entry : weeklyEntries) {
-			String unitName = entry.getUnit().split(":")[0];
+			String unitName = entry.getGroup();
 			hours.put(unitName, hours.getOrDefault(unitName, 0f) + entry.getHours());
 			areas.put(unitName, EnumSupplier.getNameFromArea(entry.getArea()));
 			satisfaction.put(unitName, satisfaction.getOrDefault(unitName, 0) + entry.getSatisfaction());

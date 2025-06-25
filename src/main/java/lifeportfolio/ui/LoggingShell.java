@@ -2,6 +2,8 @@ package lifeportfolio.ui;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.standard.*;
@@ -43,12 +45,23 @@ public class LoggingShell {
 			@ShellOption(
 					value = { "--id", "-i" },
 					help = "ID of the existing template entry."
-					) Long id
+					) Long id,
+			@ShellOption(
+					value = { "--message", "-m" },
+					help = "Specific message for a new entry (same as from the existing one by default).",
+					defaultValue = ShellOption.NULL
+					) String message
 			) {
 		LifeEntry oldEntry = service.getById(id);
 		LifeEntry newEntry = new LifeEntry();
 		newEntry.setDate(LocalDate.now());
-		newEntry.setUnit(oldEntry.getUnit());
+		newEntry.setCreatedDate(oldEntry.getCreatedDate());
+		if (message == null) {
+			newEntry.setUnit(oldEntry.getUnit());
+		} else {
+			String group = oldEntry.getGroup();
+			newEntry.setUnit(String.format("%s: %s", group, message));
+		}
 		newEntry.setHours(oldEntry.getHours());
 		newEntry.setImportance(oldEntry.getImportance());
 		newEntry.setSatisfaction(oldEntry.getSatisfaction());
@@ -222,6 +235,24 @@ public class LoggingShell {
 				hours
 				);
 		return String.join("\n", entries.stream().map(e -> e.toString()).toList());
+	}
+	
+	@ShellMethod(value = "Find group of entries")
+	public String findGroup(
+			@ShellOption(
+					value = { "--group-name", "-g", "-n" },
+					help = "Name of the group"
+					)
+			String groupName
+			) {
+		CompletableFuture<List<LifeEntry>> future = service.filterByGroup(groupName);
+		List<LifeEntry> entries;
+		try {
+			entries = future.get();
+			return String.join("\n", entries.stream().map(LifeEntry::toString).toList());
+		} catch (InterruptedException | ExecutionException e) {
+			return e.getLocalizedMessage();
+		}
 	}
 	
 	@ShellMethod(key = "gen-report", value = "Generate weekly report and save to a CSV file.")

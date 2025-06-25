@@ -16,5 +16,9 @@ public interface LifeRepo extends JpaRepository<LifeEntry, Long> {
 			@Param("from") LocalDate from,
 			@Param("to") LocalDate to
 			);
+	@Query("SELECT e FROM LifeEntry e WHERE e.unit LIKE :group")
+	public List<LifeEntry> filterbyGroup(
+			@Param("group") String groupName
+			);
 	
 }

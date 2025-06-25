@@ -15,6 +15,9 @@ public class LifeEntry {
 	private Long id;
 	@Setter
 	@Getter
+	private LocalDate createdDate = LocalDate.now();
+	@Setter
+	@Getter
 	private LocalDate date = LocalDate.now();
 	@Setter
 	@Getter
@@ -35,6 +38,10 @@ public class LifeEntry {
 	@Getter
 	private String unit = "<unknown unit>";
 	
+	public String getGroup() {
+		return unit.split(":")[0];
+	}
+	
 	@Override
 	public boolean equals(Object anotherObject) {
 		boolean equals = false;
@@ -52,7 +59,7 @@ public class LifeEntry {
 	@Override
 	public String toString() {
 		return String.format(
-				"%d. (🗓️%s) 🚩%s [%s]\n - (⏱️ %.2f hrs) \"%s\" %d 🌟 / %d ❤️",
+				"%d. (🗓️%s) 🚩%s [%s]\n - (⏱️ %.2f hrs) \"%s\" %d 🌟 / %d ❤️\nFrom: %s",
 				id,
 				date,
 				EnumSupplier.getNameFromArea(area),
@@ -60,7 +67,8 @@ public class LifeEntry {
 				hours,
 				unit,
 				importance,
-				satisfaction
+				satisfaction,
+				createdDate.toString()
 				);
 	}
 
