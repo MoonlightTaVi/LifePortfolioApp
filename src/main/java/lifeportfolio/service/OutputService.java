@@ -24,6 +24,7 @@ public class OutputService {
 		Map<String, Integer> satisfaction = new HashMap<>();
 		Map<String, Integer> importance = new HashMap<>();
 		Map<String, Integer> count = new HashMap<>();
+		weeklyEntries.sort(Comparator.reverseOrder());
 		for (LifeEntry entry : weeklyEntries) {
 			String unitName = entry.getGroup();
 			hours.put(unitName, hours.getOrDefault(unitName, 0f) + entry.getHours());

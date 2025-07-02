@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import lifeportfolio.db.LifeRepo;
 import lifeportfolio.models.LifeEntry;
+import lifeportfolio.models.LifeEntryComparator;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -92,7 +93,7 @@ public class LifeDbService implements InitializingBean {
 				.filter(e -> e.getDate().isAfter(
 						LocalDate.now().minusDays(7)
 						))
-				.sorted((a, b) -> b.getDate().compareTo(a.getDate()))
+				.sorted(LifeEntryComparator.get())
 				.limit(limitNumber)
 				.toList();
 	}
@@ -185,7 +186,7 @@ public class LifeDbService implements InitializingBean {
 					filter = filter &&
 							(e.getHours().compareTo(hours) >= 0);
 					return filter;
-			}).sorted((a, b) -> b.getDate().compareTo(a.getDate())).toList();
+			}).sorted(LifeEntryComparator.get()).toList();
 	}
 
 }

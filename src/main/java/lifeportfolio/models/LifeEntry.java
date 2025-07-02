@@ -8,7 +8,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "life-entries")
-public class LifeEntry {
+public class LifeEntry implements Comparable<LifeEntry> {
 	@Id
 	@Getter
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -70,6 +70,15 @@ public class LifeEntry {
 				satisfaction,
 				createdDate.toString()
 				);
+	}
+
+	@Override
+	public int compareTo(LifeEntry o) {
+		int result = -date.compareTo(o.date);
+		if (result == 0) {
+			result = -id.compareTo(o.getId());
+		}
+		return result;
 	}
 
 }
