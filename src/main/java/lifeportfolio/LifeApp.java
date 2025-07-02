@@ -6,15 +6,13 @@ import java.nio.file.Paths;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ConfigurableApplicationContext;
 
 @SpringBootApplication
 public class LifeApp {
 
 	public static void main(String[] args) {
 		createFolders();
-		ConfigurableApplicationContext context = SpringApplication.run(LifeApp.class, args);
-		context.close();
+		SpringApplication.run(LifeApp.class, args);
 		
 	}
 	public static boolean createFolders() {
