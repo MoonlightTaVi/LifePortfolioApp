@@ -1,5 +1,7 @@
 package lifeportfolio.ui;
 
+import java.io.File;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.standard.*;
 
@@ -19,8 +21,9 @@ public class UtilShell {
 	@ShellMethod(key = "gen-report", value = "Generate weekly report and save to a CSV file.")
 	public String generateReport() {
 		String[] result = new String[2];
-		result[0] = writer.generateReport(service.filterByLastWeek());
-		result[1] = writer.openOutputFolder();
+		File savedFile = writer.generateReport(service.filterByLastWeek());
+		result[0] = savedFile.getAbsolutePath();
+		result[1] = writer.openOutputFile(savedFile);
 		return String.join("\n", result);
 	}
 	

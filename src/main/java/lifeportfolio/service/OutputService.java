@@ -8,6 +8,7 @@ import java.util.*;
 import org.springframework.stereotype.Service;
 
 import lifeportfolio.enums.EnumSupplier;
+import lifeportfolio.infrastructure.OsUtils;
 import lifeportfolio.models.LifeEntry;
 
 @Service
@@ -18,7 +19,7 @@ public class OutputService {
 		return LocalDateTime.now().format(format) + ".csv";
 	}
 	
-	public String generateReport(List<LifeEntry> weeklyEntries) {
+	public File generateReport(List<LifeEntry> weeklyEntries) {
 		Map<String, Float> hours = new HashMap<>();
 		Map<String, String> areas = new HashMap<>();
 		Map<String, Integer> satisfaction = new HashMap<>();
@@ -60,17 +61,16 @@ public class OutputService {
 		} catch (IOException e) {
 			return null;
 		}
-		return file.getAbsolutePath();
+		return file;
 	}
 	
-	public String openOutputFolder() {
-		File outputDir = new File("output/");
+	public String openOutputFile(File file) {
 		String result = "Successfully opened.";
 		try {
-        	Runtime.getRuntime().exec(String.format("explorer %s", outputDir.getAbsolutePath()));
-        } catch (IOException | SecurityException e) {
-        	result = e.getMessage();
-        }
+			OsUtils.openInSystem(file);
+		} catch (Exception e) {
+			result = e.getLocalizedMessage();
+		}
 		return result;
 	}
 	
