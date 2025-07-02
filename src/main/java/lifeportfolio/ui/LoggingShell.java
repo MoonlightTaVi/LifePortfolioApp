@@ -158,17 +158,29 @@ public class LoggingShell {
 	@ShellMethod(
 			value = "List cached entries."
 			)
-	public String list() {
+	public String list(
+			@ShellOption(
+					value = { "--number", "-n" },
+					help = "Limit results to this number of entries",
+					defaultValue = "7"
+					)
+			Long limitNumber
+			) {
 		return String.join(
 				"\n",
 				service
 				.getCachedEntries()
 				.stream()
+				.filter(e -> e.getDate().isAfter(
+						LocalDate.now().minusDays(7)
+						)
+						)
 				.sorted(
 						(a, b) -> b.getDate().compareTo(a.getDate()) + 
 						b.getId().compareTo(a.getId())
 						)
 				.map(e -> e.toString())
+				.limit(limitNumber)
 				.toList()
 				);
 	}
