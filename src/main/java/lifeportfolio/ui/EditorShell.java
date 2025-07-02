@@ -84,6 +84,7 @@ public class EditorShell {
 			satisfaction = Math.min(Math.max(satisfaction, 0), 10);
 			entry.setSatisfaction(satisfaction);
 		}
+		service.save(entry);
 		return "Saved: \n" + entry.toString();
 	}
 	
