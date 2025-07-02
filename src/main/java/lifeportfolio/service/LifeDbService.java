@@ -6,6 +6,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -22,16 +23,44 @@ public class LifeDbService implements InitializingBean {
 	@Getter
 	private Set<LifeEntry> cachedEntries = new HashSet<>();
 	
-	
+	/**
+	 * Save an existing or a new LifeEntry to the database.
+	 * @param entry LifeEntry to be saved.
+	 */
 	public void save(LifeEntry entry) {
 		entry = repository.save(entry);
 		cachedEntries.add(entry);
 	}
-	public void delete(LifeEntry entry) {
+	/**
+	 * Delete an existing LifeEntry from the database. 
+	 * @param entry LifeEntry to be removed.
+	 * @return true if deleted successfully, false if the
+	 * Entry is not existent inside the database.
+	 * @throws OptimisticLockingFailureException If the Entry exists,
+	 * but could not be deleted
+	 * due to optimistic locking.
+	 */
+	public boolean delete(LifeEntry entry) throws OptimisticLockingFailureException {
+		boolean success = false;
 		cachedEntries.remove(entry);
-		repository.delete(entry);
+		Long id = entry.getId();
+		if (id == null) {
+			id = -1L;
+		}
+		if (repository.existsById(id)) {
+			repository.delete(entry);
+			success = true;
+		}
+		return success;
 	}
 	
+	/**
+	 * First tries to find the LifeEntry with the specified ID in cache;
+	 * then searches through DB. <br>
+	 * It is faster then searching by other attributes.
+	 * @param id ID of the LifeEntry.
+	 * @return LifeEntry with the specified ID if exists, null otherwise.
+	 */
 	public LifeEntry getById(long id) {
 		LifeEntry entry = cachedEntries.parallelStream()
 				.filter(e -> e.getId().longValue() == id)
@@ -43,11 +72,21 @@ public class LifeDbService implements InitializingBean {
 		return entry;
 	}
 	
+	/**
+	 * Adds all Entries of the past week to the cache
+	 * on startup.
+	 */
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		cachedEntries.addAll(filterByLastWeek());
 	}
 	
+	/**
+	 * Fetches logged Entries, filtering by last week, from cache.
+	 * @param limitNumber Max amount of Entries in the List.
+	 * @return List of Entries, filtered by date and limited by max size.
+	 * @see #afterPropertiesSet()
+	 */
 	public List<LifeEntry> getWeekly(long limitNumber) {
 		return cachedEntries.stream()
 				.filter(e -> e.getDate().isAfter(
@@ -58,15 +97,32 @@ public class LifeDbService implements InitializingBean {
 				.toList();
 	}
 	
+	/**
+	 * Fetches all Entries of the past week from the database.
+	 * @return List of Entries, filtered by date (past week).
+	 */
 	public List<LifeEntry> filterByLastWeek() {
 		LocalDate now = LocalDate.now();
 		return filterByDate(now.minusDays(6), now);
 	}
 	
+	/**
+	 * Fetches all Entries of the specified time period from the database.
+	 * @param from Beginning of the time period (inclusive)
+	 * @param to Ending of the time period (inclusive)
+	 * @return List of Entries, filtered by date.
+	 */
 	public List<LifeEntry> filterByDate(LocalDate from, LocalDate to) {
 		return repository.filterByDate(from, to);
 	}
 	
+	/**
+	 * Filters all Entries by group name. Repository uses {@code LIKE}
+	 * SQL keyword for this purpose.
+	 * @param group LifeEntry must start with this sequence of characters.
+	 * @return CompletableFuture, that collects the result in another Thread
+	 * (must be awaited for completion).
+	 */
 	@Async("customTaskExecutor")
 	public CompletableFuture<List<LifeEntry>> filterByGroup(String group) {
 		return CompletableFuture.supplyAsync(
@@ -74,6 +130,21 @@ public class LifeDbService implements InitializingBean {
 					);
 	}
 	
+	/**
+	 * Filters all Entries by the given parameters and
+	 * returns the result.
+	 * @param forPastWeeks Time period (date is indexed, so that
+	 * must increase performance).
+	 * @param nameStartsWith Partial LifeEntry name.
+	 * @param areaName Partial LifeEntry Area name.
+	 * @param elementName Partial LifeEntry PERMAV name.
+	 * @param showImportant Filter by: only importance >= 5.
+	 * @param showUnimportant Filter by: only importance <= 5.
+	 * @param showSatisfied Filter by: only satisfaction >= 5.
+	 * @param showUnsatisfied Filter by: only satisfaction <= 5.
+	 * @param hours Filter by: only hours >= {this number}.
+	 * @return Filtered List of LifeEntries.
+	 */
 	public List<LifeEntry> filter(
 			long forPastWeeks,
 			String nameStartsWith,
