@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.standard.*;
 
 import lifeportfolio.models.LifeEntry;
+import lifeportfolio.models.LifeEntryComparator;
 import lifeportfolio.service.*;
 import lombok.Setter;
 
@@ -126,16 +127,27 @@ public class LoggingShell {
 	@ShellMethod(value = "Find group of entries")
 	public String findGroup(
 			@ShellOption(
-					value = { "--group-name", "-g", "-n" },
+					value = { "--group-name", "-g" },
 					help = "Name of the group"
 					)
-			String groupName
+			String groupName,
+			@ShellOption(
+					value = { "--number", "-n" },
+					help = "Limit the amount of entries to this number",
+					defaultValue = "15"
+					)
+			Long limitNumber
 			) {
 		CompletableFuture<List<LifeEntry>> future = service.filterByGroup(groupName);
 		List<LifeEntry> entries;
 		try {
 			entries = future.get();
-			return String.join("\n", entries.stream().map(LifeEntry::toString).toList());
+			return String.join("\n", entries.stream()
+					.sorted(LifeEntryComparator.get())
+					.limit(limitNumber)
+					.map(LifeEntry::toString)
+					.toList()
+					);
 		} catch (InterruptedException | ExecutionException e) {
 			return e.getLocalizedMessage();
 		}
