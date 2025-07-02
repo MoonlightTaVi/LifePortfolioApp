@@ -50,15 +50,16 @@ public class LoggingShell {
 					value = { "--message", "-m" },
 					help = "Specific message for a new entry (same as from the existing one by default).",
 					defaultValue = ShellOption.NULL
-					) String message
+					) String[] messageArr
 			) {
 		LifeEntry oldEntry = service.getById(id);
 		LifeEntry newEntry = new LifeEntry();
 		newEntry.setDate(LocalDate.now());
 		newEntry.setCreatedDate(oldEntry.getCreatedDate());
-		if (message == null) {
+		if (messageArr == null) {
 			newEntry.setUnit(oldEntry.getUnit());
 		} else {
+			String message = String.join(" ", messageArr);
 			String group = oldEntry.getGroup();
 			newEntry.setUnit(String.format("%s: %s", group, message));
 		}
