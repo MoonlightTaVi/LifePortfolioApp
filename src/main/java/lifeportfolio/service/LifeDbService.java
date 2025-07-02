@@ -48,12 +48,13 @@ public class LifeDbService implements InitializingBean {
 		cachedEntries.addAll(filterByLastWeek());
 	}
 	
-	public List<LifeEntry> getWeekly() {
+	public List<LifeEntry> getWeekly(long limitNumber) {
 		return cachedEntries.stream()
 				.filter(e -> e.getDate().isAfter(
 						LocalDate.now().minusDays(7)
 						))
 				.sorted((a, b) -> b.getDate().compareTo(a.getDate()))
+				.limit(limitNumber)
 				.toList();
 	}
 	
@@ -86,7 +87,7 @@ public class LifeDbService implements InitializingBean {
 			) {
 		LocalDate now = LocalDate.now();
 		return repository.filterByDate(
-				now.minusWeeks(forPastWeeks),
+				now.minusWeeks(forPastWeeks).plusDays(1),
 				now
 				)
 				.stream().parallel()

@@ -1,9 +1,5 @@
 package lifeportfolio.ui;
 
-import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.standard.*;
 
@@ -18,7 +14,6 @@ public class EditorShell {
 	@Autowired
 	@Setter
 	private LifeDbService service;
-	private EnumListing enumListing = new EnumListing();
 
 	@ShellMethod(value = "Set an Activity Area for a log entry.")
 	public String setArea(
@@ -63,20 +58,33 @@ public class EditorShell {
 		return "Saved: " + entry.toString();
 	}
 	
-	@ShellMethod(
-			value = "List Activity areas."
-			)
-	public String areas() {
-		String[] list = enumListing.listAreas(service.getCachedEntries());
-		return String.join("\n", list);
-	}
-	
-	@ShellMethod(
-			value = "List PERMAV elements."
-			)
-	public String permav() {
-		String[] list = enumListing.listElements(service.getCachedEntries());
-		return String.join("\n", list);
+	@ShellMethod(value = "Set satisfaction / importance values for a log entry with the specified ID.")
+	public String set(
+			@ShellOption(
+					value = { "--id", "-I" },
+					help = "Entry ID."
+					) Long id,
+			@ShellOption(
+					value = { "--importance", "-i" },
+					help = "Importance (0-10).",
+					defaultValue = ShellOption.NULL
+					) Integer importance,
+			@ShellOption(
+					value = { "--satisfaction", "-s" },
+					help = "Satisfaction (0-10).",
+					defaultValue = ShellOption.NULL
+					) Integer satisfaction
+			) {
+		LifeEntry entry = service.getById(id);
+		if (importance != null) {
+			importance = Math.min(Math.max(importance, 0), 10);
+			entry.setImportance(importance);
+		}
+		if (satisfaction != null) {
+			satisfaction = Math.min(Math.max(satisfaction, 0), 10);
+			entry.setSatisfaction(satisfaction);
+		}
+		return "Saved: \n" + entry.toString();
 	}
 	
 }

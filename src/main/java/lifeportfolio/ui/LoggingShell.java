@@ -2,8 +2,7 @@ package lifeportfolio.ui;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.standard.*;
@@ -18,9 +17,6 @@ public class LoggingShell {
 	@Autowired
 	@Setter
 	private LifeDbService service;
-	@Autowired
-	@Setter
-	private OutputService writer;
 	
 	@ShellMethod(value = "Add a new activity entry to log.")
 	public String add(
@@ -70,35 +66,6 @@ public class LoggingShell {
 		newEntry.setPermav(oldEntry.getPermav());
 		service.save(newEntry);
 		return "Saved: \n" + newEntry.toString();
-	}
-	
-	@ShellMethod(value = "Set satisfaction / importance values for a log entry with the specified ID.")
-	public String set(
-			@ShellOption(
-					value = { "--id", "-I" },
-					help = "Entry ID."
-					) Long id,
-			@ShellOption(
-					value = { "--importance", "-i" },
-					help = "Importance (0-10).",
-					defaultValue = ShellOption.NULL
-					) Integer importance,
-			@ShellOption(
-					value = { "--satisfaction", "-s" },
-					help = "Satisfaction (0-10).",
-					defaultValue = ShellOption.NULL
-					) Integer satisfaction
-			) {
-		LifeEntry entry = service.getById(id);
-		if (importance != null) {
-			importance = Math.min(Math.max(importance, 0), 10);
-			entry.setImportance(importance);
-		}
-		if (satisfaction != null) {
-			satisfaction = Math.min(Math.max(satisfaction, 0), 10);
-			entry.setSatisfaction(satisfaction);
-		}
-		return "Saved: \n" + entry.toString();
 	}
 	
 	@ShellMethod(value = "Set the date for the entry with the specified ID.")
@@ -156,100 +123,6 @@ public class LoggingShell {
 		}
 	}
 	
-	@ShellMethod(
-			value = "List cached entries."
-			)
-	public String list(
-			@ShellOption(
-					value = { "--number", "-n" },
-					help = "Limit results to this number of entries",
-					defaultValue = "7"
-					)
-			Long limitNumber
-			) {
-		return String.join(
-				"\n",
-				service
-				.getCachedEntries()
-				.stream()
-				.filter(e -> e.getDate().isAfter(
-						LocalDate.now().minusDays(7)
-						)
-						)
-				.sorted(
-						(a, b) -> b.getDate().compareTo(a.getDate()) + 
-						b.getId().compareTo(a.getId())
-						)
-				.map(e -> e.toString())
-				.limit(limitNumber)
-				.toList()
-				);
-	}
-	
-	@ShellMethod(
-			value = "List filtered entries."
-			)
-	public String filter(
-			@ShellOption(
-					value = { "--name", "-n" },
-					help = "(Optional) Unit name starts with this sequence of characters.",
-					defaultValue = ShellOption.NULL
-					) String nameStartsWith,
-			@ShellOption(
-					value = { "--area", "-a" },
-					help = "(Optional) Filter by partial area name.",
-					defaultValue = ShellOption.NULL
-					) String areaName,
-			@ShellOption(
-					value = { "--element", "-e" },
-					help = "(Optional) Filter by partial PERMAV element name.",
-					defaultValue = ShellOption.NULL
-					) String elementName,
-			@ShellOption(
-					value = { "--important", "-i" },
-					help = "(Optional) Filter by importance >= 5.",
-					defaultValue = "false"
-					) Boolean showImportant,
-			@ShellOption(
-					value = { "--unimportant", "-I" },
-					help = "(Optional) Filter by importance <= 5.",
-					defaultValue = "false"
-					) Boolean showUnimportant,
-			@ShellOption(
-					value = { "--satisfied", "-s" },
-					help = "(Optional) Filter by satisfaction >= 5.",
-					defaultValue = "false"
-					) Boolean showSatisfied,
-			@ShellOption(
-					value = { "--unsatisfied", "-S" },
-					help = "(Optional) Filter by satisfaction <= 5.",
-					defaultValue = "false"
-					) Boolean showUnsatisfied,
-			@ShellOption(
-					value = { "--weeks", "-w" },
-					help = "(Optional) Filter by occurences in this number of passed weeks.",
-					defaultValue = "1"
-					) Long weeks,
-			@ShellOption(
-					value = { "--hours", "--h", "--time", "-t" },
-					help = "(Optional) Filter by hours >= {number}.",
-					defaultValue = "0"
-					) Float hours
-			) {
-		List<LifeEntry> entries = service.filter(
-				weeks,
-				nameStartsWith,
-				areaName,
-				elementName,
-				showImportant,
-				showUnimportant,
-				showSatisfied,
-				showUnsatisfied,
-				hours
-				);
-		return String.join("\n", entries.stream().map(e -> e.toString()).toList());
-	}
-	
 	@ShellMethod(value = "Find group of entries")
 	public String findGroup(
 			@ShellOption(
@@ -266,13 +139,5 @@ public class LoggingShell {
 		} catch (InterruptedException | ExecutionException e) {
 			return e.getLocalizedMessage();
 		}
-	}
-	
-	@ShellMethod(key = "gen-report", value = "Generate weekly report and save to a CSV file.")
-	public String generateReport() {
-		String[] result = new String[2];
-		result[0] = writer.generateReport(service.filterByLastWeek());
-		result[1] = writer.openOutputFolder();
-		return String.join("\n", result);
 	}
 }
