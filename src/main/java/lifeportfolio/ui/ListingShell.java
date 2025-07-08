@@ -1,6 +1,6 @@
 package lifeportfolio.ui;
 
-import java.util.List;
+import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.standard.*;
@@ -8,6 +8,7 @@ import org.springframework.shell.standard.*;
 import lifeportfolio.enums.EnumListing;
 import lifeportfolio.models.LifeEntry;
 import lifeportfolio.service.LifeDbService;
+import lifeportfolio.ui.util.TextUtils;
 import lombok.Setter;
 
 @ShellComponent
@@ -35,7 +36,7 @@ public class ListingShell {
 	}
 
 	@ShellMethod(
-			value = "List cached entries."
+			value = "List weekly entries."
 			)
 	public String list(
 			@ShellOption(
@@ -45,11 +46,17 @@ public class ListingShell {
 					)
 			Long limitNumber
 			) {
-		return String.join(
+		List<LifeEntry> entries = service.getWeekly();
+		String entriesStr = String.join(
 				"\n",
-				service.getWeekly(limitNumber)
-				.stream().map(e -> e.toString()).toList()
+				entries
+				.stream()
+				.limit(limitNumber)
+				.map(e -> e.toString())
+				.toList()
 				);
+		String summary = TextUtils.summaryFromEntries(entries);
+		return String.format("%s\n\n%s\n", entriesStr, summary);
 	}
 	
 	@ShellMethod(
@@ -113,6 +120,14 @@ public class ListingShell {
 				showUnsatisfied,
 				hours
 				);
-		return String.join("\n", entries.stream().map(e -> e.toString()).toList());
+		
+		return String.format(
+				"%s\nSummary:\n%s\n",
+				String.join("\n", entries.stream()
+						.map(e -> e.toString())
+						.toList()
+						),
+				TextUtils.summaryFromEntries(entries)
+				);
 	}
 }

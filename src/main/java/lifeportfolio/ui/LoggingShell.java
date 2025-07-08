@@ -20,7 +20,7 @@ public class LoggingShell {
 	private LifeDbService service;
 	
 	@ShellMethod(value = "Add a new activity entry to log.")
-	public String add(
+	public String log(
 			@ShellOption(
 					value = { "--unit", "-u", "--message", "-m", "--desc", "-d" },
 					help = "Name / description of the logged activity unit (without quotation marks)."
@@ -97,44 +97,42 @@ public class LoggingShell {
 	}
 	
 	@ShellMethod(
-			key = "add-hrs",
-			value = "Change the time value (in hours) for entry. Set hours below zero to delete entry."
+			key = "time",
+			value = "Set the time value (in hours) for entry. Set hours below zero to delete entry."
 			)
-	public String addHours(
+	public String setHours(
 			@ShellOption(
 					value = { "--id", "-i" },
 					help = "ID of the Entry to edit."
 					) Long id,
 			@ShellOption(
 					value = { "--hours", "--time", "-t" },
-					help = "Time (in hours) to add (negative to subtract).",
+					help = "Time (in hours) to set (negative to delete).",
 					defaultValue = "0"
 					) Float hours
 			) {
 		LifeEntry entry = service.getById(id);
-		float updHours = entry.getHours();
-		updHours += hours;
-		if (updHours < 0) {
+		if (hours < 0) {
 			service.delete(entry);
 			return "Deleted.";
 		} else {
-			entry.setHours(updHours);
+			entry.setHours(hours);
 			service.save(entry);
 			return "Saved: \n" + entry.toString();
 		}
 	}
 	
 	@ShellMethod(value = "Find group of entries")
-	public String findGroup(
+	public String find(
 			@ShellOption(
-					value = { "--group-name", "-g" },
+					value = { "--group-name", "-g", "-n" },
 					help = "Name of the group"
 					)
 			String groupName,
 			@ShellOption(
 					value = { "--number", "-n" },
 					help = "Limit the amount of entries to this number",
-					defaultValue = "15"
+					defaultValue = "10"
 					)
 			Long limitNumber
 			) {

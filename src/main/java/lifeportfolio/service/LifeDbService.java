@@ -84,11 +84,24 @@ public class LifeDbService implements InitializingBean {
 	
 	/**
 	 * Fetches logged Entries, filtering by last week, from cache.
+	 * @return List of Entries, filtered by date.
+	 * @see #afterPropertiesSet()
+	 * @see #getWeekly(long)
+	 */
+	public List<LifeEntry> getWeekly() {
+		return getWeekly(0);
+	}
+	
+	/**
+	 * Fetches logged Entries, filtering by last week, from cache.
 	 * @param limitNumber Max amount of Entries in the List.
 	 * @return List of Entries, filtered by date and limited by max size.
 	 * @see #afterPropertiesSet()
 	 */
 	public List<LifeEntry> getWeekly(long limitNumber) {
+		if (limitNumber <= 0) {
+			limitNumber = cachedEntries.size();
+		}
 		return cachedEntries.stream()
 				.filter(e -> e.getDate().isAfter(
 						LocalDate.now().minusDays(7)
