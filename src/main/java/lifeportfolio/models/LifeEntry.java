@@ -9,6 +9,15 @@ import lombok.*;
 @Entity
 @Table(name = "life-entries")
 public class LifeEntry implements Comparable<LifeEntry> {
+	/** 
+	 * This sequence of characters if used to split
+	 * the {@code unit} field into the unit group (shared)
+	 * and the unit message (contains description on
+	 * the specific unit-related activity).
+	 * @see #unit
+	 */
+	public static String groupDelimiter = ":";
+	
 	@Id
 	@Getter
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,7 +48,7 @@ public class LifeEntry implements Comparable<LifeEntry> {
 	private String unit = "<unknown unit>";
 	
 	public String getGroup() {
-		return unit.split(":")[0];
+		return unit.split(groupDelimiter, 2)[0];
 	}
 	
 	@Override
