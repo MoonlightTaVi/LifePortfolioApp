@@ -1,59 +1,70 @@
 package lifeportfolio.ui.util;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 
-import lifeportfolio.enums.Area;
-import lifeportfolio.enums.EnumSupplier;
 import lifeportfolio.models.LifeEntry;
 
+/**
+ * A set of static methods, used by UI elements,
+ * for working with textual descriptions and other info.
+ */
 public class TextUtils {
 
-	public static String summaryFromEntries(Collection<LifeEntry> entries) {
+	/**
+	 * Collects info from Life Entries and makes a text summary
+	 * on total hours, average satisfaction and importance values,
+	 * grouping the result with specified Function.
+	 * @param <T> Type of a group key.
+	 * @param entries Collection of Life Entries to make the summary for.
+	 * @param groupBy The Function to identify the group an Entry belongs to.
+	 * @return Textual summary of a strict format (plain text).
+	 */
+	public static <T> String summaryFromEntries(Collection<LifeEntry> entries, Function<LifeEntry, T> groupBy) {
 		// Collect
-			Map<Area, Float> allHours = new HashMap<>();
-			Map<Area, List<Integer>> allSatisfaction = new HashMap<>();
-			Map<Area, List<Integer>> allImportance = new HashMap<>();
-			for (LifeEntry entry : entries) {
-				float hours = allHours.getOrDefault(entry.getArea(), 0f);
-				List<Integer> satisfaction = allSatisfaction.getOrDefault(
-						entry.getArea(), new ArrayList<>()
-						);
-				List<Integer> importance = allImportance.getOrDefault(
-						entry.getArea(), new ArrayList<>()
-						);
-				hours += entry.getHours();
-				satisfaction.add(entry.getSatisfaction());
-				importance.add(entry.getImportance());
-				allHours.put(entry.getArea(), hours);
-				allSatisfaction.put(entry.getArea(), satisfaction);
-				allImportance.put(entry.getArea(), importance);
+		Map<T, Float> allHours = new HashMap<>();
+		Map<T, List<Integer>> allSatisfaction = new HashMap<>();
+		Map<T, List<Integer>> allImportance = new HashMap<>();
+		for (LifeEntry entry : entries) {
+			T group = groupBy.apply(entry);
+			float hours = allHours.getOrDefault(group, 0f);
+			List<Integer> satisfaction = allSatisfaction.getOrDefault(
+					group, new ArrayList<>()
+					);
+			List<Integer> importance = allImportance.getOrDefault(
+					group, new ArrayList<>()
+					);
+			hours += entry.getHours();
+			satisfaction.add(entry.getSatisfaction());
+			importance.add(entry.getImportance());
+			allHours.put(group, hours);
+			allSatisfaction.put(group, satisfaction);
+			allImportance.put(group, importance);
+		}
+		List<String> summary = new ArrayList<>();
+		for (T group : allSatisfaction.keySet()) {
+			// Average
+			int size = allSatisfaction.get(group).size();
+			int satisfactionAvg = 0;
+			int importanceAvg = 0;
+			for (int i = 0; i < size; i++) {
+				satisfactionAvg += allSatisfaction.get(group).get(i);
+				importanceAvg += allImportance.get(group).get(i);
 			}
-			List<String> summary = new ArrayList<>();
-			for (Area area : allSatisfaction.keySet()) {
-				// Average
-				int size = allSatisfaction.get(area).size();
-				int satisfactionAvg = 0;
-				int importanceAvg = 0;
-				for (int i = 0; i < size; i++) {
-					satisfactionAvg += allSatisfaction.get(area).get(i);
-					importanceAvg += allImportance.get(area).get(i);
-				}
-				// To String
-				summary.add(
-						String.format(
-								"[%s]\n\t%.2f hrs\n\t%d satisfaction / %d importance",
-						EnumSupplier.getNameFromArea(area),
-						allHours.get(area),
-						satisfactionAvg / size,
-						importanceAvg / size
-						)
-						);
-			}
-			return String.join("\n", summary);
+			satisfactionAvg /= size;
+			importanceAvg /= size;
+			// To String
+			summary.add(
+					String.format(
+							"[%s] \n\t ⏱️%.2f hrs \n\t Average: ❤️ %d satisfaction / 🌟 %d importance",
+					group.toString(),
+					allHours.get(group),
+					satisfactionAvg,
+					importanceAvg
+					)
+					);
+		}
+		return String.join("\n", summary);
 	}
 	
 }

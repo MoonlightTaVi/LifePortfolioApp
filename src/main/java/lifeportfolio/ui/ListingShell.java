@@ -55,7 +55,7 @@ public class ListingShell {
 				.map(e -> e.toString())
 				.toList()
 				);
-		String summary = TextUtils.summaryFromEntries(entries);
+		String summary = TextUtils.summaryFromEntries(entries, entry -> entry.getGroup());
 		return String.format("%s\n\n%s\n", entriesStr, summary);
 	}
 	
@@ -127,7 +127,7 @@ public class ListingShell {
 						.map(e -> e.toString())
 						.toList()
 						),
-				TextUtils.summaryFromEntries(entries)
+				TextUtils.summaryFromEntries(entries, entry -> entry.getGroup())
 				);
 	}
 }
