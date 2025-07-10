@@ -122,7 +122,7 @@ public class LoggingShell {
 		}
 	}
 	
-	@ShellMethod(value = "Find group of entries")
+	@ShellMethod(value = "Find group of entries.")
 	public String find(
 			@ShellOption(
 					value = { "--group-name", "-g", "-n" },
