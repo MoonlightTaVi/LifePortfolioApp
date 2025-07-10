@@ -21,12 +21,16 @@ public class TextUtils {
 	 * @return Textual summary of a strict format (plain text).
 	 */
 	public static <T> String summaryFromEntries(Collection<LifeEntry> entries, Function<LifeEntry, T> groupBy) {
+		// Sort groups alphabetically
+		Set<T> groups = new TreeSet<>();
 		// Collect
 		Map<T, Float> allHours = new HashMap<>();
 		Map<T, List<Integer>> allSatisfaction = new HashMap<>();
 		Map<T, List<Integer>> allImportance = new HashMap<>();
 		for (LifeEntry entry : entries) {
 			T group = groupBy.apply(entry);
+			groups.add(group);
+			
 			float hours = allHours.getOrDefault(group, 0f);
 			List<Integer> satisfaction = allSatisfaction.getOrDefault(
 					group, new ArrayList<>()
@@ -42,7 +46,7 @@ public class TextUtils {
 			allImportance.put(group, importance);
 		}
 		List<String> summary = new ArrayList<>();
-		for (T group : allSatisfaction.keySet()) {
+		for (T group : groups) {
 			// Average
 			int size = allSatisfaction.get(group).size();
 			int satisfactionAvg = 0;
