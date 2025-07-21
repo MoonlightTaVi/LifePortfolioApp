@@ -147,9 +147,12 @@ public class LifeDbService implements InitializingBean {
 	/**
 	 * Filters all Entries by the given parameters and
 	 * returns the result.
-	 * @param forPastWeeks Time period (date is indexed, so that
-	 * must increase performance).
-	 * @param nameStartsWith Partial LifeEntry name.
+	 * @param endDate Final date to be taken into account.
+	 * @param forPastWeeks Time period to subtract from endDate (weeks)
+	 * to find the starting point of filtering.
+	 * @param forPastDays Time period to subtract from endDate (days)
+	 * to find the starting point of filtering. Days are added to {@code forPastWeeks} weeks
+	 * @param nameContains Partial LifeEntry name.
 	 * @param areaName Partial LifeEntry Area name.
 	 * @param elementName Partial LifeEntry PERMAV name.
 	 * @param showImportant Filter by: only importance >= 5.
@@ -160,8 +163,10 @@ public class LifeDbService implements InitializingBean {
 	 * @return Filtered List of LifeEntries.
 	 */
 	public List<LifeEntry> filter(
+			LocalDate endDate,
 			long forPastWeeks,
-			String nameStartsWith,
+			long forPastDays,
+			String nameContains,
 			String areaName,
 			String elementName,
 			boolean showImportant,
@@ -170,17 +175,16 @@ public class LifeDbService implements InitializingBean {
 			boolean showUnsatisfied,
 			float hours
 			) {
-		LocalDate now = LocalDate.now();
 		return repository.filterByDate(
-				now.minusWeeks(forPastWeeks).plusDays(1),
-				now
+				endDate.minusDays(7 * forPastWeeks + forPastDays).plusDays(1),
+				endDate
 				)
 				.stream().parallel()
 				.filter( e -> {
 					boolean filter = true;
-					filter = filter && (nameStartsWith == null ||
+					filter = filter && (nameContains == null ||
 							e.getUnit().toLowerCase()
-							.startsWith(nameStartsWith.toLowerCase()));
+							.contains(nameContains.toLowerCase()));
 					filter = filter && (areaName == null ||
 							e.getArea().toString().toLowerCase()
 							.contains(areaName));

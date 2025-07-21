@@ -1,5 +1,6 @@
 package lifeportfolio.ui;
 
+import java.time.LocalDate;
 import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,18 +100,34 @@ public class ListingShell {
 					defaultValue = "false"
 					) Boolean showUnsatisfied,
 			@ShellOption(
+					value = { "--date", "-d" },
+					help = "(Optional) Final date of the filter, format: yyyy-MM-dd. May be used to find something in the past.",
+					defaultValue = ShellOption.NULL
+					) String endDate,
+			@ShellOption(
 					value = { "--weeks", "-w" },
 					help = "(Optional) Filter by occurences in this number of passed weeks.",
 					defaultValue = "1"
 					) Long weeks,
+			@ShellOption(
+					value = { "--minus-days", "--minus", "--days", "-m" },
+					help = "(Optional) Filter by occurences in this number of passed days (added to weeks).",
+					defaultValue = "0"
+					) Long days,
 			@ShellOption(
 					value = { "--hours", "--h", "--time", "-t" },
 					help = "(Optional) Filter by hours >= {number}.",
 					defaultValue = "0"
 					) Float hours
 			) {
+		LocalDate date = LocalDate.now();
+		if (endDate != null) {
+			date = LocalDate.parse(endDate);
+		}
 		List<LifeEntry> entries = service.filter(
+				date,
 				weeks,
+				days,
 				nameStartsWith,
 				areaName,
 				elementName,
